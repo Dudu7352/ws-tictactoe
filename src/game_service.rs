@@ -7,7 +7,7 @@ use crate::{
     client_conn::ClientConn,
     game::Game,
     messages::{
-        server::{GameEnded, GameWaiting, ServerGameEvent},
+        server::{GameEnded, GameStarted, GameWaiting, OpponentMove, ServerGameEvent},
         user::{UserConnectionEvent, UserGameEvent},
     },
 };
@@ -74,6 +74,15 @@ impl GameService {
             } => {
                 let players = [*waiting_player_id, *joining_player_id];
                 let started_game = Game::new_started(players);
+                players.iter().for_each(|player_id| {
+                    self.send_to_player(
+                        player_id,
+                        ServerGameEvent::GameStarted(GameStarted {
+                            game_id,
+                            your_turn: started_game.is_current_turn(*player_id),
+                        }),
+                    )
+                });
                 self.games.insert(game_id, started_game);
             }
         }
@@ -162,6 +171,13 @@ impl Handler<UserGameEvent> for GameService {
                             let curr_player_i = 1 - *first_player_turn as usize;
                             if players[curr_player_i] == player_move.player_id {
                                 board[player_move.y][player_move.x] = curr_player_i as i8;
+                                self.send_to_player(
+                                    &players[1 - curr_player_i],
+                                    ServerGameEvent::OpponentMove(OpponentMove {
+                                        x: player_move.x,
+                                        y: player_move.y,
+                                    }),
+                                );
                                 let _ = self.try_end_game(&player_move.game_id);
                             }
                         }

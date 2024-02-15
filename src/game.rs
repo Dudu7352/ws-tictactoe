@@ -51,4 +51,13 @@ impl Game {
             },
         }
     }
+
+    pub fn is_current_turn(&self, player_id: Uuid) -> bool {
+        match self {
+            Game::Waiting { player_id: _ } => false,
+            Game::Started { players, board: _, first_player_turn } => {
+                players[1 - *first_player_turn as usize] == player_id
+            },
+        }
+    }
 }
