@@ -29,7 +29,8 @@ impl Actor for ClientConn {
 
     fn stopping(&mut self, _: &mut Self::Context) -> actix::prelude::Running {
         let _ = self.game_service.send(UserConnectionEvent::Disconnect(Disconnect {
-            self_id: self.id
+            player_id: self.id,
+            game_id: self.game_id
         }));
         actix::Running::Stop
     }

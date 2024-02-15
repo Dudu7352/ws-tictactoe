@@ -31,9 +31,12 @@ impl GameService {
         self.sessions.insert(player_id, player_addr);
     }
 
-    pub fn deregister_player(&mut self, player_id: &Uuid, game_id: &Uuid) {
-        self.sessions.remove(player_id);
-        if let Some(game) = self.games.get(game_id) {
+    pub fn deregister_player(&mut self, player_id: Uuid, game_id_opt: Option<Uuid>) {
+        self.sessions.remove(&player_id);
+        if game_id_opt.is_none() {
+            return;
+        }
+        if let Some(game) = self.games.get(&game_id_opt.unwrap()) {
             match game {
                 Game::Waiting { player_id: _ } => {}
                 Game::Started {
@@ -41,11 +44,11 @@ impl GameService {
                     board: _,
                     first_player_turn: _,
                 } => self.send_to_player(
-                    &players[if players[0] == *player_id { 1 } else { 0 }],
+                    &players[if players[0] == player_id { 1 } else { 0 }],
                     ServerGameEvent::GameEnded(GameEnded { won: true }),
                 ),
             }
-            self.games.remove(game_id);
+            self.games.remove(&game_id_opt.unwrap());
         }
     }
 
@@ -124,11 +127,11 @@ impl Handler<UserConnectionEvent> for GameService {
         match msg {
             UserConnectionEvent::Connect(connect) => {
                 self.register_player(connect.player_id, connect.addr)
-            },
-            UserConnectionEvent::NotResponding => {},
-            UserConnectionEvent::Disconnect(Disconnect) => {
-                
-            },
+            }
+            UserConnectionEvent::NotResponding => {}
+            UserConnectionEvent::Disconnect(disconnect) => {
+                self.deregister_player(disconnect.player_id, disconnect.game_id);
+            }
         }
     }
 }

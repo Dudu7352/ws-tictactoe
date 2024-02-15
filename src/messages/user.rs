@@ -34,7 +34,8 @@ pub struct StartGame {
 
 #[derive(Deserialize)]
 pub struct Disconnect {
-    pub self_id: Uuid,
+    pub player_id: Uuid,
+    pub game_id: Option<Uuid>
 }
 
 #[derive(Deserialize)]
