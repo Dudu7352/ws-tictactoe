@@ -132,7 +132,7 @@ impl Actor for GameService {
 impl Handler<UserConnectionEvent> for GameService {
     type Result = ();
 
-    fn handle(&mut self, msg: UserConnectionEvent, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: UserConnectionEvent, _ctx: &mut Self::Context) -> Self::Result {
         match msg {
             UserConnectionEvent::Connect(connect) => {
                 self.register_player(connect.player_id, connect.addr)
@@ -148,7 +148,7 @@ impl Handler<UserConnectionEvent> for GameService {
 impl Handler<UserGameEvent> for GameService {
     type Result = ();
 
-    fn handle(&mut self, msg: UserGameEvent, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: UserGameEvent, _ctx: &mut Self::Context) -> Self::Result {
         match msg {
             UserGameEvent::StartGame(start_game) => {
                 self.start_game(&start_game.player_id, start_game.public_game)
