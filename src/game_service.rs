@@ -8,7 +8,7 @@ use crate::{
     game::Game,
     messages::{
         server::{GameEnded, GameWaiting, ServerGameEvent},
-        user::{Disconnect, UserConnectionEvent, UserGameEvent},
+        user::{UserConnectionEvent, UserGameEvent},
     },
 };
 
@@ -140,6 +140,34 @@ impl Handler<UserGameEvent> for GameService {
     type Result = ();
 
     fn handle(&mut self, msg: UserGameEvent, ctx: &mut Self::Context) -> Self::Result {
-        todo!()
+        match msg {
+            UserGameEvent::StartGame(start_game) => {
+                self.start_game(&start_game.player_id, start_game.public_game)
+            }
+            UserGameEvent::JoinPrivGame(join_priv_game) => {
+                self.join_game(join_priv_game.game_id, &join_priv_game.player_id)
+            }
+            UserGameEvent::PlayerMove(player_move) => {
+                if let Some(game) = self.games.get(&player_move.game_id) {
+                    if player_move.x > 2 || player_move.y > 2 {
+                        return;
+                    }
+                    match game {
+                        Game::Waiting { player_id: _ } => (),
+                        Game::Started {
+                            players,
+                            mut board,
+                            first_player_turn,
+                        } => {
+                            let curr_player_i = 1 - *first_player_turn as usize;
+                            if players[curr_player_i] == player_move.player_id {
+                                board[player_move.y][player_move.x] = curr_player_i as i8;
+                                let _ = self.try_end_game(&player_move.game_id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
