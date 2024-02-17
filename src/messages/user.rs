@@ -4,10 +4,16 @@ use uuid::Uuid;
 
 use crate::client_conn::ClientConn;
 
-#[derive(Message, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Message)]
 #[rtype(result = "()")]
-pub enum UserGameEvent {
+pub struct UserGameEvent {
+    pub player_id: Uuid,
+    pub event: UserEvent
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum UserEvent {
     StartGame(StartGame),
     JoinPrivGame(JoinPrivGame),
     PlayerMove(PlayerMove),
@@ -28,7 +34,6 @@ pub struct Connect {
 
 #[derive(Deserialize)]
 pub struct StartGame {
-    pub player_id: Uuid,
     pub public_game: bool
 }
 
@@ -40,7 +45,6 @@ pub struct Disconnect {
 
 #[derive(Deserialize)]
 pub struct JoinPrivGame {
-    pub player_id: Uuid,
     pub game_id: Uuid
 }
 
@@ -48,6 +52,5 @@ pub struct JoinPrivGame {
 pub struct PlayerMove {
     pub x: usize,
     pub y: usize,
-    pub player_id: Uuid,
     pub game_id: Uuid
 }
