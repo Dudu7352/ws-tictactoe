@@ -33,22 +33,26 @@ pub struct Connect {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StartGame {
     pub public_game: bool
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Disconnect {
     pub player_id: Uuid,
     pub game_id: Option<Uuid>
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct JoinPrivGame {
     pub game_id: Uuid
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlayerMove {
     pub x: usize,
     pub y: usize,
