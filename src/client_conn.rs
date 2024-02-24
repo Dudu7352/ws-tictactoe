@@ -21,14 +21,14 @@ impl Actor for ClientConn {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
-        let _ = self.game_service.send(UserConnectionEvent::Connect(Connect {
+        self.game_service.do_send(UserConnectionEvent::Connect(Connect {
             player_id: self.id,
             addr: ctx.address()
         }));
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> actix::prelude::Running {
-        let _ = self.game_service.send(UserConnectionEvent::Disconnect(Disconnect {
+        self.game_service.do_send(UserConnectionEvent::Disconnect(Disconnect {
             player_id: self.id,
             game_id: self.game_id
         }));
@@ -65,6 +65,15 @@ impl Handler<ServerGameEvent> for ClientConn {
     type Result = ();
 
     fn handle(&mut self, msg: ServerGameEvent, ctx: &mut Self::Context) -> Self::Result {
+        match &msg {
+            ServerGameEvent::GameWaiting(game_waiting) => {
+                self.game_id = Some(game_waiting.game_id);
+            },
+            ServerGameEvent::GameEnded(_) => {
+                self.game_id = None;
+            },
+            _ => {}
+        }
         ctx.text(serde_json::to_string(&msg).unwrap());
     }
 }
@@ -77,7 +86,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ClientConn {
                 ws::Message::Text(txt) => {
                     match serde_json::from_str::<UserEvent>(&txt) {
                         Ok(event) => {
-                            self.game_service.send(UserGameEvent {
+                            self.game_service.do_send(UserGameEvent {
                                 player_id: self.id,
                                 event
                             });

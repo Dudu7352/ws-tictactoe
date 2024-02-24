@@ -54,7 +54,7 @@ impl GameService {
 
     pub fn send_to_player(&self, player_id: &Uuid, msg: ServerGameEvent) {
         if let Some(player) = self.sessions.get(player_id) {
-            let _ = player.send(msg);
+            player.do_send(msg);
         }
     }
 
