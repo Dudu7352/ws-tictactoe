@@ -1,37 +1,97 @@
+/** @type {WebSocket} */
 const websocketConnection = new WebSocket("ws://127.0.0.1:8080/api/ws");
 
-function startPlaying() {
-  // TODO
-  console.log("Starting game...");
-  websocketConnection.send(JSON.stringify({
-    startGame: {
-      publicGame: true,
-    },
-  }));
+/** @type {{id: string, status: "waiting"} | {id: string, status: "started", board: string[][], turn: boolean} | null} */
+let game = null;
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {string} char
+ */
+function placeTile(x, y, char) {
+  if(game != null && game.status == "started") {
+    game.board[x][y] = char;
+  }
 }
 
-function startPrivate() {
+function startPlayingInput() {
+  // TODO
+  console.log("Starting game...");
+  websocketConnection.send(
+    JSON.stringify({
+      startGame: {
+        publicGame: true,
+      },
+    })
+  );
+}
+
+function startPrivateInput() {
   // TODO
   console.log("Starting private...");
-  websocketConnection.send(JSON.stringify({
-    startGame: {
-      publicGame: false,
-    },
-  }));
+  websocketConnection.send(
+    JSON.stringify({
+      startGame: {
+        publicGame: false,
+      },
+    })
+  );
 }
 
 /**
  * @param {SubmitEvent} e
  */
-function joinPriv(e) {
+function joinPrivateInput(e) {
   e.preventDefault();
   // TODO
   console.log(e.target.elements["id"].value);
-  websocketConnection.send(JSON.stringify({
-    joinPrivGame: {
-      gameId: e.target.elements["id"].value,
-    },
-  }));
+  websocketConnection.send(
+    JSON.stringify({
+      joinPrivGame: {
+        gameId: e.target.elements["id"].value,
+      },
+    })
+  );
+}
+
+/**
+ * @param {string} gameId
+ */
+function handleGameWaiting(gameId) {
+  game = {
+    id: gameId,
+    status: "waiting"
+  };
+}
+
+/**
+ * @param {string} gameId
+ * @param {boolean} yourTurn 
+ */
+function handleGameStarted(gameId, yourTurn) {
+  game = {
+    id: gameId,
+    status: "started",
+    board: Array.from(Array(3)).map(_ => Array(3).fill("")),
+    turn: yourTurn
+  };
+}
+
+/**
+ * @param {boolean} won
+ */
+function handleGameEnded(won) {
+  alert(won ? "You win" : "You lose");
+  game = null
+}
+
+/**
+ * @param {number} x
+ * @param {number} y
+ */
+function handleOpponentMove(x, y) {
+
 }
 
 websocketConnection.addEventListener("open", (e) => {
@@ -40,9 +100,20 @@ websocketConnection.addEventListener("open", (e) => {
 
 websocketConnection.addEventListener("message", (messageEvent) => {
   // TODO
-  console.log(messageEvent.data);
+  const data = messageEvent.data;
+  console.log(data);
+  if (data.gameWaiting !== undefined) 
+    handleGameWaiting(...data.gameWaiting);
+  else if (data.gameStarted !== undefined)
+    handleGameStarted(...data.gameStarted);
+  else if (data.gameEnded !== undefined)
+    handleGameEnded(...data.gameEnded);
+  else if (data.opponentMove !== undefined)
+    handleOpponentMove(...data.opponentMove);
+
+  console.log(game);
 });
 
-document.getElementById("start-game").addEventListener("click", startPlaying);
-document.getElementById("start-priv").addEventListener("click", startPrivate);
-document.getElementById("join-priv").addEventListener("submit", joinPriv);
+document.getElementById("start-game").addEventListener("click", startPlayingInput);
+document.getElementById("start-priv").addEventListener("click", startPrivateInput);
+document.getElementById("join-priv").addEventListener("submit", joinPrivateInput);
