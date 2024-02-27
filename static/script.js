@@ -81,7 +81,15 @@ function handleGameEnded(won) {
  * @param {number} y
  */
 function handleOpponentMove(x, y) {
-  
+  if(
+    game !== null 
+    && game.status === "started"
+    && y > 0 && y < game.board.length
+    && x > 0 && x < game.board[0].length
+    ) {
+    game.turn = true;
+    game.board[y][x] = game.isO ? "X" : "O";
+  }
 }
 
 websocketConnection.addEventListener("open", (e) => {
