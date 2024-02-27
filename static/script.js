@@ -4,6 +4,28 @@ const websocketConnection = new WebSocket("ws://127.0.0.1:8080/api/ws");
 /** @type {{id: string, status: "waiting"} | {id: string, status: "started", board: string[][], turn: boolean, isO: boolean} | null} */
 let game = null;
 
+/** @type {HTMLDivElement[][]} */
+let gameBoardTiles = [];
+
+function initializeHtmlBoard() {
+  const gameBoard = document.getElementById("game-board");
+  gameBoard.style.gridTemplateColumns = `repeat(${game.board.length}, auto)`;
+  game.board.forEach(row => {
+    gameBoardTiles.push(
+      row.map(_ => {
+        const tile = document.createElement("div");
+        tile.innerText = "";
+        gameBoardTiles.push(tile);
+        gameBoard.appendChild(tile);
+      })
+    );
+  });
+}
+
+function resetHtmlBoard() {
+  gameBoardTiles.forEach(row => row.forEach(e => e.innerText = ""));
+}
+
 function startPlayingInput() {
   // TODO
   console.log("Starting game...");
@@ -68,6 +90,10 @@ function handleGameStarted({gameId, yourTurn}) {
     turn: yourTurn,
     isO: yourTurn
   };
+  if(gameBoardTiles.length === 0)
+    initializeHtmlBoard();
+  else
+    resetHtmlBoard();
 }
 
 /**
@@ -92,7 +118,9 @@ function handleOpponentMove({x, y}) {
     && x > 0 && x < game.board[0].length
     ) {
     game.turn = true;
-    game.board[y][x] = game.isO ? "X" : "O";
+    const tileValue = game.isO ? "X" : "O"
+    game.board[y][x] = tileValue;
+    gameBoardTiles[y][x].innerText = tileValue;
   }
 }
 

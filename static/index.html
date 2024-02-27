@@ -4,14 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Actix Tic Tac Toe</title>
+    <style>
+        #game-board {
+            display: grid;
+            width: fit-content;
+        }
+
+        #game-board > div {
+            border: 1px solid black;
+            box-sizing: border-box;
+            width: 2rem;
+            height: 2rem;
+            line-height: 100%;
+        }
+    </style>
 </head>
 <body>
-    <button id="start-game">Play on public server</button>
-    <button id="start-priv">Start private game</button>
-    <form id="join-priv">
-        <input type="text" name="id"/>
-        <input type="submit" value="Join Private game" />
-    </form>
+    <div id="game-form">
+        <button id="start-game">Play on public server</button>
+        <button id="start-priv">Start private game</button>
+        <form id="join-priv">
+            <input type="text" name="id"/>
+            <input type="submit" value="Join Private game" />
+        </form>
+    </div>
+
+    <div id="game-board">
+        
+    </div>
 
     <script src="script.js"></script>
 </body>
