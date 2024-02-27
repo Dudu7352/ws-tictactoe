@@ -1,19 +1,8 @@
 /** @type {WebSocket} */
 const websocketConnection = new WebSocket("ws://127.0.0.1:8080/api/ws");
 
-/** @type {{id: string, status: "waiting"} | {id: string, status: "started", board: string[][], turn: boolean} | null} */
+/** @type {{id: string, status: "waiting"} | {id: string, status: "started", board: string[][], turn: boolean, isO: boolean} | null} */
 let game = null;
-
-/**
- * @param {number} x
- * @param {number} y
- * @param {string} char
- */
-function placeTile(x, y, char) {
-  if(game != null && game.status == "started") {
-    game.board[x][y] = char;
-  }
-}
 
 function startPlayingInput() {
   // TODO
@@ -74,7 +63,8 @@ function handleGameStarted(gameId, yourTurn) {
     id: gameId,
     status: "started",
     board: Array.from(Array(3)).map(_ => Array(3).fill("")),
-    turn: yourTurn
+    turn: yourTurn,
+    isO: yourTurn
   };
 }
 
@@ -91,7 +81,7 @@ function handleGameEnded(won) {
  * @param {number} y
  */
 function handleOpponentMove(x, y) {
-
+  
 }
 
 websocketConnection.addEventListener("open", (e) => {
