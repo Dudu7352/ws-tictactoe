@@ -45,9 +45,10 @@ function joinPrivateInput(e) {
 }
 
 /**
- * @param {string} gameId
+ * @param {Object} v
+ * @param {string} v.gameId
  */
-function handleGameWaiting(gameId) {
+function handleGameWaiting({gameId}) {
   game = {
     id: gameId,
     status: "waiting"
@@ -55,10 +56,11 @@ function handleGameWaiting(gameId) {
 }
 
 /**
- * @param {string} gameId
- * @param {boolean} yourTurn 
+ * @param {Object} v
+ * @param {string} v.gameId
+ * @param {boolean} v.yourTurn
  */
-function handleGameStarted(gameId, yourTurn) {
+function handleGameStarted({gameId, yourTurn}) {
   game = {
     id: gameId,
     status: "started",
@@ -69,18 +71,20 @@ function handleGameStarted(gameId, yourTurn) {
 }
 
 /**
- * @param {boolean} won
+ * @param {Object} v
+ * @param {boolean} v.won
  */
-function handleGameEnded(won) {
+function handleGameEnded({won}) {
   alert(won ? "You win" : "You lose");
   game = null
 }
 
 /**
- * @param {number} x
- * @param {number} y
+ * @param {Object} v
+ * @param {number} v.x
+ * @param {number} v.y
  */
-function handleOpponentMove(x, y) {
+function handleOpponentMove({x, y}) {
   if(
     game !== null 
     && game.status === "started"
@@ -98,16 +102,16 @@ websocketConnection.addEventListener("open", (e) => {
 
 websocketConnection.addEventListener("message", (messageEvent) => {
   // TODO
-  const data = messageEvent.data;
+  const data = JSON.parse(messageEvent.data);
   console.log(data);
   if (data.gameWaiting !== undefined) 
-    handleGameWaiting(...data.gameWaiting);
+    handleGameWaiting(data.gameWaiting);
   else if (data.gameStarted !== undefined)
-    handleGameStarted(...data.gameStarted);
+    handleGameStarted(data.gameStarted);
   else if (data.gameEnded !== undefined)
-    handleGameEnded(...data.gameEnded);
+    handleGameEnded(data.gameEnded);
   else if (data.opponentMove !== undefined)
-    handleOpponentMove(...data.opponentMove);
+    handleOpponentMove(data.opponentMove);
 
   console.log(game);
 });
