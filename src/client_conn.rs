@@ -4,7 +4,7 @@ use actix::{Actor, ActorContext, Addr, AsyncContext, Handler, StreamHandler};
 use actix_web_actors::ws::{self, WebsocketContext};
 use uuid::Uuid;
 
-use crate::{game_service::GameService, messages::{server::ServerGameEvent, user::{Connect, Disconnect, UserConnectionEvent, UserEvent, UserGameEvent}}};
+use crate::{game_service::GameService, messages::{server::ServerGameEvent, user::{Connect, Disconnect, JoinPrivGame, UserConnectionEvent, UserEvent, UserGameEvent}}};
 
 const PING_TIMEOUT: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(15);
@@ -86,6 +86,13 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ClientConn {
                 ws::Message::Text(txt) => {
                     match serde_json::from_str::<UserEvent>(&txt) {
                         Ok(event) => {
+                            if let Some(_) = self.game_id {
+                                match event {
+                                    UserEvent::StartGame(_) => return (),
+                                    UserEvent::JoinPrivGame(_) => return (),
+                                    UserEvent::PlayerMove(_) => {},
+                                }
+                            }
                             self.game_service.do_send(UserGameEvent {
                                 player_id: self.id,
                                 event
