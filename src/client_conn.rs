@@ -4,7 +4,7 @@ use actix::{Actor, ActorContext, Addr, AsyncContext, Handler, StreamHandler};
 use actix_web_actors::ws::{self, WebsocketContext};
 use uuid::Uuid;
 
-use crate::{game_service::GameService, messages::{server::ServerGameEvent, user::{Connect, Disconnect, JoinPrivGame, UserConnectionEvent, UserEvent, UserGameEvent}}};
+use crate::{game_service::GameService, messages::{server::ServerGameEvent, user::{Connect, Disconnect, UserConnectionEvent, UserEvent, UserGameEvent}}};
 
 const PING_TIMEOUT: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(15);
