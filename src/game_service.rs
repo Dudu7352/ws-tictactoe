@@ -103,7 +103,8 @@ impl GameService {
                 ServerGameEvent::GameWaiting(GameWaiting { game_id }),
             );
         } else {
-            self.join_game(self.waiting_game.unwrap(), player_id)
+            self.join_game(self.waiting_game.unwrap(), player_id);
+            self.waiting_game = None;
         }
     }
 
@@ -169,7 +170,6 @@ impl Handler<UserGameEvent> for GameService {
                             board,
                             first_player_turn,
                         } => {
-                            println!("{:?}", first_player_turn);
                             let curr_player_i = 1 - *first_player_turn as usize;
                             if players[curr_player_i] == msg.player_id {
                                 board[player_move.y][player_move.x] = curr_player_i as i8;
