@@ -1,3 +1,7 @@
+const gameStatusParagraph = document.getElementById("game-status");
+const turnStatusParagraph = document.getElementById("turn-status");
+const gameBoard = document.getElementById("game-board");
+
 /** @type {WebSocket} */
 const websocketConnection = new WebSocket("ws://127.0.0.1:8080/api/ws");
 
@@ -8,7 +12,6 @@ let game = null;
 let gameBoardTiles = [];
 
 function initializeHtmlBoard() {
-  const gameBoard = document.getElementById("game-board");
   gameBoard.style.gridTemplateColumns = `repeat(${game.board.length}, auto)`;
   game.board.forEach((row, y) => {
     gameBoardTiles.push(
@@ -27,6 +30,7 @@ function initializeHtmlBoard() {
               }
             }));
             game.turn = false;
+            turnStatusParagraph.innerText = "Opponent turn";
           }
         });
         gameBoard.appendChild(tile);
@@ -89,6 +93,7 @@ function handleGameWaiting({ gameId }) {
     id: gameId,
     status: "waiting",
   };
+  gameStatusParagraph.innerText = `Waiting. Game Id: ${game.id}`;
 }
 
 /**
@@ -106,6 +111,9 @@ function handleGameStarted({ gameId, yourTurn }) {
   };
   if (gameBoardTiles.length === 0) initializeHtmlBoard();
   else resetHtmlBoard();
+  gameStatusParagraph.innerText = `Playing with ${yourTurn ? "O" : "X"}`;
+  turnStatusParagraph.innerText = yourTurn ? "Your turn" : "Opponent turn";
+  gameBoard.style.display = "grid";
 }
 
 /**
@@ -115,6 +123,9 @@ function handleGameStarted({ gameId, yourTurn }) {
 function handleGameEnded({ won }) {
   alert(won ? "You win" : "You lose");
   game = null;
+  gameBoard.style.display = "none";
+  gameStatusParagraph.innerText = "";
+  turnStatusParagraph.innerText = "";
 }
 
 /**
@@ -132,6 +143,7 @@ function handleOpponentMove({ x, y }) {
     x < game.board[0].length
   ) {
     game.turn = true;
+    turnStatusParagraph.innerText = "Your turn";
     const tileValue = game.isO ? "X" : "O";
     game.board[y][x] = tileValue;
     gameBoardTiles[y][x].innerText = tileValue;
