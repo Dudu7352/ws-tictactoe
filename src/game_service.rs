@@ -157,22 +157,26 @@ impl Handler<UserGameEvent> for GameService {
                 self.join_game(join_priv_game.game_id, &msg.player_id)
             }
             UserEvent::PlayerMove(player_move) => {
-                if let Some(game) = self.games.get(&player_move.game_id) {
-                    if player_move.x > 2 || player_move.y > 2 {
-                        return;
-                    }
+                if player_move.x > 2 || player_move.y > 2 {
+                    return;
+                }
+
+                if let Some(game) = self.games.get_mut(&player_move.game_id) {
                     match game {
                         Game::Waiting { player_id: _ } => (),
                         Game::Started {
                             players,
-                            mut board,
+                            board,
                             first_player_turn,
                         } => {
+                            println!("{:?}", first_player_turn);
                             let curr_player_i = 1 - *first_player_turn as usize;
                             if players[curr_player_i] == msg.player_id {
                                 board[player_move.y][player_move.x] = curr_player_i as i8;
+                                let player_id = players[1 - curr_player_i].clone();
+                                *first_player_turn = !(*first_player_turn);
                                 self.send_to_player(
-                                    &players[1 - curr_player_i],
+                                    &player_id,
                                     ServerGameEvent::OpponentMove(OpponentMove {
                                         x: player_move.x,
                                         y: player_move.y,
