@@ -10,13 +10,27 @@ let gameBoardTiles = [];
 function initializeHtmlBoard() {
   const gameBoard = document.getElementById("game-board");
   gameBoard.style.gridTemplateColumns = `repeat(${game.board.length}, auto)`;
-  game.board.forEach((row) => {
+  game.board.forEach((row, y) => {
     gameBoardTiles.push(
-      row.map((_) => {
+      row.map((_, x) => {
         const tile = document.createElement("div");
         tile.innerText = "";
-        gameBoardTiles.push(tile);
+        tile.addEventListener("click" ,() => {
+          if(game.status === "started" && game.board[y][x] === "" && game.turn) {
+            tile.innerText = game.isO ? "O" : "X";
+            game.board[y][x] = game.isO ? "O" : "X";
+            websocketConnection.send(JSON.stringify({
+              playerMove: {
+                gameId: game.id,
+                x: x,
+                y: y
+              }
+            }));
+            game.turn = false;
+          }
+        });
         gameBoard.appendChild(tile);
+        return tile;
       })
     );
   });
@@ -112,9 +126,9 @@ function handleOpponentMove({ x, y }) {
   if (
     game !== null &&
     game.status === "started" &&
-    y > 0 &&
+    y >= 0 &&
     y < game.board.length &&
-    x > 0 &&
+    x >= 0 &&
     x < game.board[0].length
   ) {
     game.turn = true;
