@@ -118,10 +118,10 @@ function handleGameStarted({ gameId, yourTurn }) {
 
 /**
  * @param {Object} v
- * @param {boolean} v.won
+ * @param {"win" | "loss" | "opponentDisconnected"} v.result
  */
-function handleGameEnded({ won }) {
-  alert(won ? "You win" : "You lose");
+function handleGameEnded({ result }) {
+  alert(`Game ended with ${result}`);
   game = null;
   gameBoard.style.display = "none";
   gameStatusParagraph.innerText = "";

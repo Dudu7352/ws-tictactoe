@@ -5,9 +5,9 @@ use uuid::Uuid;
 
 use crate::{
     client_conn::ClientConn,
-    game::Game,
+    game::{Game, GameEndResults},
     messages::{
-        server::{GameEnded, GameStarted, GameWaiting, OpponentMove, ServerGameEvent},
+        server::{GameEnded, GameResult, GameStarted, GameWaiting, OpponentMove, ServerGameEvent},
         user::{UserConnectionEvent, UserEvent, UserGameEvent},
     },
 };
@@ -45,7 +45,7 @@ impl GameService {
                     first_player_turn: _,
                 } => self.send_to_player(
                     &players[if players[0] == player_id { 1 } else { 0 }],
-                    ServerGameEvent::GameEnded(GameEnded { won: true }),
+                    ServerGameEvent::GameEnded(GameEnded { result: GameResult::OpponentDisconnected }),
                 ),
             }
             self.games.remove(&game_id_opt.unwrap());
@@ -111,15 +111,26 @@ impl GameService {
     pub fn try_end_game(&mut self, game_id: &Uuid) -> Result<(), ()> {
         let game = self.games.get(game_id).ok_or(())?;
         let results = game.get_winner().ok_or(())?;
-
-        self.send_to_player(
-            &results.winner,
-            ServerGameEvent::GameEnded(GameEnded { won: true }),
-        );
-        self.send_to_player(
-            &results.loser,
-            ServerGameEvent::GameEnded(GameEnded { won: false }),
-        );
+        match results {
+            GameEndResults::Win { winner, loser } => {
+                self.send_to_player(
+                    &winner,
+                    ServerGameEvent::GameEnded(GameEnded { result: GameResult::Win }),
+                );
+                self.send_to_player(
+                    &loser,
+                    ServerGameEvent::GameEnded(GameEnded { result: GameResult::Loss }),
+                );
+            },
+            GameEndResults::Tie => {
+                if let Game::Started { players, board: _, first_player_turn: _ } = game {
+                    players.iter().for_each(|player|
+                        self.send_to_player(player, 
+                        ServerGameEvent::GameEnded(GameEnded { result: GameResult::Tie }))
+                    );
+                }    
+            },
+        }
         self.games.remove(game_id);
 
         Ok(())

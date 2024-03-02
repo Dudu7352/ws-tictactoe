@@ -28,7 +28,16 @@ pub struct GameStarted {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameEnded {
-    pub won: bool,
+    pub result: GameResult,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GameResult {
+    Win,
+    Loss,
+    Tie,
+    OpponentDisconnected
 }
 
 #[derive(Serialize)]

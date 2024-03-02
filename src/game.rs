@@ -11,10 +11,14 @@ pub enum Game {
     }
 }
 
-pub struct GameEndResults {
-    pub winner: Uuid,
-    pub loser: Uuid
+pub enum GameEndResults {
+    Win{
+        winner: Uuid,
+        loser: Uuid
+    },
+    Tie
 }
+
 
 impl Game {
     pub fn new_started(players: [Uuid; 2]) -> Self {
@@ -30,6 +34,7 @@ impl Game {
                     let mut diag_down = 0;
                     let mut col: u8 = 0;
                     let mut row: u8 = 0;
+                    let mut filled: u8 = 0;
                     for y in 0..3usize {
                         col = 0;
                         row = 0;
@@ -39,6 +44,7 @@ impl Game {
                         for x in 0..3usize {
                             col += (board[x][y] == player_id as i8) as u8;
                             row += (board[y][x] == player_id as i8) as u8;
+                            filled += (board[y][x] != -1) as u8;
                         }
 
                         if col==3 || row==3 {
@@ -48,10 +54,15 @@ impl Game {
 
                     if col==3 || row==3 || diag_up==3 || diag_down==3 {
                         return Some(
-                            GameEndResults {
+                            GameEndResults::Win {
                                 winner: players[player_id],
                                 loser: players[1-player_id]
                             }
+                        );
+                    }
+                    if filled == 9 {
+                        return Some(
+                            GameEndResults::Tie
                         );
                     }
                 }
