@@ -51,6 +51,14 @@ impl ClientConn {
             ctx.ping(b"PING");
             let elapsed = conn.last_ping.elapsed();
             if elapsed > CLIENT_TIMEOUT {
+                conn.game_service.do_send(
+                    UserConnectionEvent::Disconnect(
+                        Disconnect { 
+                            player_id: conn.id, 
+                            game_id: conn.game_id 
+                        }
+                    )
+                );
                 ctx.close(None);
                 ctx.stop();
             }
