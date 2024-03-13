@@ -2,12 +2,14 @@ mod messages;
 mod client_conn;
 mod game;
 mod game_service;
+mod config;
 
 use actix::{Actor, Addr};
 use actix_web::{
     get, web::{self, Data}, App, Error, HttpRequest, HttpResponse, HttpServer, Scope
 };
 use actix_web_actors::ws;
+use config::Config;
 use game_service::GameService;
 
 use crate::client_conn::ClientConn;
@@ -19,6 +21,11 @@ async fn connect_ws(req: HttpRequest, stream: web::Payload, data: Data<Addr<Game
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let config = match Config::load() {
+        Ok(val) => val,
+        Err(err) => panic!("Config error: {:?}", err),
+    };
+    
     let game_service = GameService::new().start();
 
     HttpServer::new(move || {
