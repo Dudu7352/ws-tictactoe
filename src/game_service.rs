@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use actix::{Actor, Addr, Context, Handler};
+use rand::{rngs::ThreadRng, thread_rng, Rng};
 use uuid::Uuid;
 
 use crate::{
@@ -16,6 +17,8 @@ pub struct GameService {
     sessions: HashMap<Uuid, Addr<ClientConn>>,
     games: HashMap<Uuid, Game>,
     waiting_game: Option<Uuid>,
+    waiting_priv_games: HashMap<String, Uuid>,
+    rng: ThreadRng
 }
 
 impl GameService {
@@ -24,6 +27,8 @@ impl GameService {
             sessions: HashMap::new(),
             games: HashMap::new(),
             waiting_game: None,
+            waiting_priv_games: HashMap::new(),
+            rng: thread_rng()
         }
     }
 
@@ -38,7 +43,9 @@ impl GameService {
         }
         if let Some(game) = self.games.get(&game_id_opt.unwrap()) {
             match game {
-                Game::Waiting { player_id: _ } => {}
+                Game::Waiting { player_id: _, join_code } => {
+                    join_code.as_ref().map(|code| self.waiting_priv_games.remove(code));
+                }
                 Game::Started {
                     players,
                     board: _,
@@ -58,6 +65,12 @@ impl GameService {
         }
     }
 
+    pub fn join_private_game(&mut self, join_code: String, joining_player_id: &Uuid) {
+        if let Some(game_id) = self.waiting_priv_games.get(&join_code) {
+            self.join_game(game_id.clone(), joining_player_id)
+        }
+    }
+
     pub fn join_game(&mut self, game_id: Uuid, joining_player_id: &Uuid) {
         let game = self.games.get(&game_id);
         if game.is_none() {
@@ -70,7 +83,7 @@ impl GameService {
                 first_player_turn: _,
             } => {}
             Game::Waiting {
-                player_id: waiting_player_id,
+                player_id: waiting_player_id, join_code
             } => {
                 let players = [*waiting_player_id, *joining_player_id];
                 let started_game = Game::new_started(players);
@@ -83,6 +96,7 @@ impl GameService {
                         }),
                     )
                 });
+                join_code.as_ref().map(|code| self.waiting_priv_games.remove(code));
                 self.games.insert(game_id, started_game);
             }
         }
@@ -91,16 +105,25 @@ impl GameService {
     pub fn start_game(&mut self, player_id: &Uuid, public: bool) {
         if !public || self.waiting_game.is_none() {
             let game_id = Uuid::new_v4();
+            let join_code = if public { 
+                self.waiting_game = Some(game_id);
+                None 
+            } else { 
+                let code = format!("{:0>6}", self.rng.gen_range(0..=999999));
+                self.waiting_priv_games.insert(code.clone(), game_id);
+                Some(code)
+            };
+
             let game = Game::Waiting {
                 player_id: *player_id,
+                join_code: join_code.clone()
             };
+
             self.games.insert(game_id, game);
-            if public {
-                self.waiting_game = Some(game_id);
-            }
+
             self.send_to_player(
                 player_id,
-                ServerGameEvent::GameWaiting(GameWaiting { game_id }),
+                ServerGameEvent::GameWaiting(GameWaiting { game_id, join_code }),
             );
         } else {
             self.join_game(self.waiting_game.unwrap(), player_id);
@@ -166,7 +189,7 @@ impl Handler<UserGameEvent> for GameService {
                 self.start_game(&msg.player_id, start_game.public_game)
             }
             UserEvent::JoinPrivGame(join_priv_game) => {
-                self.join_game(join_priv_game.game_id, &msg.player_id)
+                self.join_private_game(join_priv_game.join_code, &msg.player_id)
             }
             UserEvent::PlayerMove(player_move) => {
                 if player_move.x > 2 || player_move.y > 2 {
@@ -175,7 +198,7 @@ impl Handler<UserGameEvent> for GameService {
 
                 if let Some(game) = self.games.get_mut(&player_move.game_id) {
                     match game {
-                        Game::Waiting { player_id: _ } => (),
+                        Game::Waiting { player_id: _, join_code: _ } => (),
                         Game::Started {
                             players,
                             board,

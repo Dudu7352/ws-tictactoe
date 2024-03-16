@@ -15,7 +15,8 @@ pub enum ServerGameEvent {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameWaiting {
-    pub game_id: Uuid
+    pub game_id: Uuid,
+    pub join_code: Option<String>
 }
 
 #[derive(Serialize)]
