@@ -96,8 +96,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ClientConn {
                         Ok(event) => {
                             if let Some(_) = self.game_id {
                                 match event {
-                                    UserEvent::StartGame(_) => return (),
-                                    UserEvent::JoinPrivGame(_) => return (),
+                                    UserEvent::StartGame(_) => return,
+                                    UserEvent::JoinPrivGame(_) => return,
                                     UserEvent::PlayerMove(_) => {},
                                 }
                             }

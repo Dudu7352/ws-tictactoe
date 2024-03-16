@@ -3,6 +3,7 @@ use uuid::Uuid;
 pub enum Game {
     Waiting {
         player_id: Uuid,
+        join_code: Option<String>
     },
     Started {
         players: [Uuid; 2],
@@ -27,7 +28,7 @@ impl Game {
 
     pub fn get_winner(&self) -> Option<GameEndResults> {
         match self {
-            Game::Waiting { player_id: _ } => None,
+            Game::Waiting { player_id: _, join_code: _ } => None,
             Game::Started { players, board, first_player_turn: _ } => {
                 for player_id in [0usize, 1usize] {
                     let mut diag_up = 0;
@@ -73,7 +74,7 @@ impl Game {
 
     pub fn is_current_turn(&self, player_id: Uuid) -> bool {
         match self {
-            Game::Waiting { player_id: _ } => false,
+            Game::Waiting { player_id: _ , join_code: _} => false,
             Game::Started { players, board: _, first_player_turn } => {
                 players[1 - *first_player_turn as usize] == player_id
             },

@@ -78,7 +78,7 @@ function joinPrivateInput(e) {
   websocketConnection.send(
     JSON.stringify({
       joinPrivGame: {
-        gameId: e.target.elements["id"].value,
+        joinCode: e.target.elements["id"].value,
       },
     })
   );
@@ -87,13 +87,14 @@ function joinPrivateInput(e) {
 /**
  * @param {Object} v
  * @param {string} v.gameId
+ * @param {string} v.joinCode
  */
-function handleGameWaiting({ gameId }) {
+function handleGameWaiting({ gameId, joinCode }) {
   game = {
     id: gameId,
     status: "waiting",
   };
-  gameStatusParagraph.innerText = `Waiting. Game Id: ${game.id}`;
+  gameStatusParagraph.innerText = `Waiting. Game Code: ${joinCode}`;
 }
 
 /**

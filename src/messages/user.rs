@@ -48,7 +48,7 @@ pub struct Disconnect {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinPrivGame {
-    pub game_id: Uuid
+    pub join_code: String
 }
 
 #[derive(Deserialize)]
